@@ -39,7 +39,7 @@ def parse_labels(raw: str, n: int):
 
 def label_batch(texts):
     body = {
-        "model": os.getenv("GROQ_MODEL", "qwen/qwen3-32b"),
+        "model": os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"),
         "temperature": 0,
         "max_tokens": 2500,
         "messages": [
