@@ -1,0 +1,16 @@
+{
+  "f1_macro": 0.9306394020655707,
+  "per_aspect": {
+    "battery": 0.8954095128168134,
+    "display": 0.9895225622097868,
+    "performance": 0.9431843206342215,
+    "heating": 0.979467791967792,
+    "camera": 1.0,
+    "value_for_money": 0.7762522247648106
+  },
+  "decision": true,
+  "reasons": [
+    "no champion yet",
+    "all checks passed"
+  ]
+}

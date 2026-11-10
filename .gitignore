@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.venv/
+__pycache__/
+*.db
+.pytest_cache/
+mlops/models/
+mlops/data/train_current.csv
+.dvc/config.local

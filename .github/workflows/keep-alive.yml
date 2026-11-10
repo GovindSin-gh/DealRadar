@@ -1,0 +1,15 @@
+name: Keep backend awake
+on:
+  schedule:
+    - cron: "*/14 * * * *"   # Render's free tier sleeps after about 15 idle minutes
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /api/health
+        env:
+          API_URL: ${{ vars.API_URL }}
+        run: |
+          if [ -z "$API_URL" ]; then echo "Set the API_URL repository variable first"; exit 0; fi
+          curl -fsS --max-time 60 "$API_URL/api/health" || echo "ping failed"

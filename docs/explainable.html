@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DealRadar: Complete Documentation</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+html{scroll-behavior:smooth}body{font-family:Inter,system-ui,sans-serif;background:#020617}
+.mono,code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.card{background:#0f172a;border:1px solid #1e293b;border-radius:16px}
+.plain{background:#1e1b4b66;border:1px solid #6366f14d;border-radius:12px;padding:12px 16px;font-size:14px;color:#c7d2fe;margin:12px 0 20px}.plain b{color:#e0e7ff}
+.chip{border-radius:999px;padding:2px 10px;font-size:12px;font-family:ui-monospace,monospace;border:1px solid;display:inline-block}
+.r{background:#f871711a;color:#f87171;border-color:#f871714d}.a{background:#fbbf241a;color:#fbbf24;border-color:#fbbf244d}.e{background:#34d3991a;color:#34d399;border-color:#34d3994d}.i{background:#6366f11a;color:#a5b4fc;border-color:#6366f14d}.s{background:#1e293b;color:#94a3b8;border-color:#334155}
+.box{border-radius:12px;padding:12px 16px;font-size:14px;border:1px solid}
+.nav a{display:block;padding:6px 12px;border-left:2px solid #1e293b;color:#64748b;font-size:14px;transition:.15s}.nav a:hover{color:#e2e8f0}.nav a.on{color:#f8fafc;border-color:#6366f1}
+section{scroll-margin-top:84px}h2{font-size:24px;font-weight:700;color:#f8fafc}h3{color:#f8fafc;font-weight:600}
+th{text-align:left;color:#94a3b8;font-weight:500;padding:8px 12px;border-bottom:1px solid #1e293b}td{padding:8px 12px;border-bottom:1px solid #1e293b;vertical-align:top}
+pre{background:#020617;border:1px solid #1e293b;border-radius:10px;padding:12px 14px;font-size:12px;color:#cbd5e1;overflow-x:auto;white-space:pre}
+summary{list-style:none;cursor:pointer}summary::-webkit-details-marker{display:none}
+.nd{cursor:pointer}.nd rect{fill:#0f172a;stroke:#334155;stroke-width:1.5;transition:.2s}.nd:hover rect,.nd.sel rect{stroke:#6366f1;fill:#1e293b}.nd.lit rect{stroke:#34d399;fill:#052e2b;filter:drop-shadow(0 0 8px #34d39966)}.nd text{pointer-events:none}
+.flow{fill:none;stroke-width:2;stroke-dasharray:6 6;animation:dash 1.2s linear infinite}@keyframes dash{to{stroke-dashoffset:-24}}.flow.off{animation:none;opacity:.3}
+.lc{transition:.25s}.lc.on{border-color:#6366f1;background:#1e1b4b}.lc.skip{opacity:.35}
+button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid #6366f1;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.flow{animation:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body class="text-slate-300">
+<header class="border-b border-slate-800 sticky top-0 bg-slate-950/90 backdrop-blur z-30">
+ <div class="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between gap-3">
+  <div class="flex items-center gap-3">
+   <svg width="30" height="30" viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="none" stroke="#6366f1" stroke-width="2"/><circle cx="17" cy="17" r="8" fill="none" stroke="#6366f1" stroke-opacity=".5" stroke-width="2"/><path d="M17 17 L28 9" stroke="#34d399" stroke-width="2.5" stroke-linecap="round"/><circle cx="17" cy="17" r="2.5" fill="#34d399"/></svg>
+   <div><b class="text-slate-50">DealRadar</b> <span class="text-slate-500 text-sm">Complete documentation</span></div></div>
+  <span class="chip e hidden sm:inline-block">₹0 to run</span>
+ </div>
+ <nav id="topnav" class="lg:hidden flex gap-4 overflow-x-auto px-5 pb-2 text-sm"></nav>
+</header>
+<div class="max-w-7xl mx-auto px-5 py-8 lg:grid lg:grid-cols-[210px_1fr] lg:gap-10">
+ <aside class="hidden lg:block"><nav id="side" class="nav sticky top-24"></nav></aside>
+ <main class="min-w-0 space-y-16">
+
+<section id="overview">
+ <h2>1. Overview</h2>
+ <p class="mt-2 max-w-2xl">DealRadar answers one question: <b class="text-slate-50">should I buy this phone or laptop now?</b> You paste an Amazon.in or Flipkart link. It shows the price history, what reviewers praise or complain about for each part, and a plain verdict.</p>
+ <div class="plain"><b>In plain words:</b> think of a friend who checks the price every day, reads every review, and tells you "good phone, but it overheats and the battery is weak. The price is the lowest in 3 months, so buy now."</div>
+ <div id="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5"></div>
+ <h3 class="mb-2">What happens in five steps</h3>
+ <div id="five" class="grid sm:grid-cols-5 gap-3 mb-5"></div>
+ <div class="box a" style="font-family:inherit"><b>Honest status.</b> Data is <b>sample data</b> until you switch on live scraping. The Amazon.in and Flipkart parsers are tested on saved page samples, not against the live sites, and shops block bots. Emails need an SMTP account. The included classifier is a <b>demo</b> trained on synthetic reviews. Both are replaced with real data in the deployment guide. Free-tier limits change, so verify them before you rely on them.</div>
+</section>
+
+<section id="architecture">
+ <h2>2. Architecture</h2>
+ <div class="plain"><b>In plain words:</b> the top row is what happens while you wait. The bottom row is a night shift that runs by itself. Click a box, or press a trace button to watch a path light up.</div>
+ <div class="flex flex-wrap gap-2 mb-3 text-sm">
+  <button id="tReq" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white transition">Trace a user request</button>
+  <button id="tBg" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 transition">Trace the weekly retrain</button></div>
+ <div class="card p-3 overflow-x-auto">
+ <svg viewBox="0 0 960 540" class="w-full min-w-[760px]" role="img" aria-label="Architecture diagram">
+  <defs><marker id="ai" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#818cf8"/></marker><marker id="ae" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#34d399"/></marker></defs>
+  <rect x="8" y="8" width="944" height="226" rx="14" fill="#6366f10a" stroke="#6366f133"/><text x="24" y="30" fill="#818cf8" font-size="12" font-weight="600">Request path: a visitor is waiting</text>
+  <rect x="8" y="300" width="944" height="232" rx="14" fill="#34d3990a" stroke="#34d39933"/><text x="24" y="322" fill="#34d399" font-size="12" font-weight="600">Background path: scheduled, nobody waiting</text>
+  <g class="rq"><path class="flow" d="M200 85H250" stroke="#818cf8" marker-end="url(#ai)"/><path class="flow" d="M450 85H500" stroke="#818cf8" marker-end="url(#ai)"/><path class="flow" d="M700 70H750" stroke="#818cf8" marker-end="url(#ai)"/><path class="flow" d="M750 100H700" stroke="#818cf8" marker-end="url(#ai)"/><path class="flow" d="M575 120V160" stroke="#818cf8" marker-end="url(#ai)"/><path class="flow" d="M625 160V120" stroke="#818cf8" marker-end="url(#ai)"/></g>
+  <text x="640" y="144" fill="#94a3b8" font-size="11">cache, rate limit, save</text><text x="708" y="62" fill="#94a3b8" font-size="11">reviews</text><text x="708" y="116" fill="#94a3b8" font-size="11">verdict</text>
+  <path class="flow bg off" id="b1" d="M200 395H250" stroke="#34d399" marker-end="url(#ae)"/><path class="flow bg off" id="b2" d="M350 360V195H500" stroke="#34d399" marker-end="url(#ae)"/><path class="flow bg off" id="b3" d="M600 230V360" stroke="#34d399" marker-end="url(#ae)"/><path class="flow bg off" id="b4" d="M700 395H750" stroke="#34d399" marker-end="url(#ae)"/><path class="flow bg off" id="b5" d="M850 360V270H640V120" stroke="#34d399" marker-end="url(#ae)"/>
+  <text x="365" y="188" fill="#94a3b8" font-size="11">daily prices, new reviews</text><text x="610" y="300" fill="#94a3b8" font-size="11">new reviews (delta)</text><text x="660" y="262" fill="#94a3b8" font-size="11">new model, redeploy</text>
+  <g id="nodes"></g>
+ </svg></div>
+ <div id="info" class="card p-5 mt-4 text-sm min-h-[88px]"><span class="text-slate-500">Select a box to see what it does, what it costs, and where it lives.</span></div>
+</section>
+
+<section id="lifecycle">
+ <h2>3. One request, step by step</h2>
+ <div class="plain"><b>In plain words:</b> a link already looked at in the last 24 hours is answered instantly from the database and does not count against your limit. Only new work is limited, because it uses the free AI quota.</div>
+ <div class="flex flex-wrap gap-2 mb-3 text-sm"><button id="pNew" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white transition">Play: new product</button><button id="pCache" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 transition">Play: already analyzed</button></div>
+ <div id="lc" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+</section>
+
+<section id="api">
+ <h2>4. Data and API</h2>
+ <div class="plain"><b>In plain words:</b> the database is six spreadsheets that point at each other. The API is a front desk with a few windows.</div>
+ <h3 class="mb-2">Database tables</h3><div id="tables" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6"></div>
+ <h3 class="mb-2">Endpoints</h3><div id="eps" class="space-y-3 mb-6"></div>
+ <h3 class="mb-2">Error codes</h3>
+ <div class="card overflow-x-auto"><table class="w-full text-sm"><tr><th>Code</th><th>Meaning</th><th>What the user sees</th></tr>
+  <tr><td class="mono">422</td><td>Link is not from amazon.in or flipkart.com, or the email is invalid</td><td>"Please paste a product link from amazon.in or flipkart.com"</td></tr>
+  <tr><td class="mono">400</td><td>More than 10 price alerts for one email</td><td>"At most 10 price alerts per email address."</td></tr>
+  <tr><td class="mono">429</td><td>More than 5 new analyses or 10 alerts this hour</td><td>Limit message with minutes to wait. Cached products still load</td></tr>
+  <tr><td class="mono">502</td><td>Live scraping failed or the shop is not supported live</td><td>"Could not read that product page right now"</td></tr>
+  <tr><td class="mono">404</td><td>Unknown product id</td><td>Product not found</td></tr></table></div>
+</section>
+
+<section id="features">
+ <h2>Features added in the final step</h2>
+ <div class="plain"><b>In plain words:</b> you can now ask to be emailed when a price drops, Flipkart links work too, failures are written down where you can read them, and a checking program proves the files still fit together.</div>
+ <div class="grid md:grid-cols-2 gap-4">
+  <div class="card p-5"><div class="flex justify-between"><h3>Price-drop emails</h3><span class="chip e">watchlist</span></div>
+   <ol class="text-sm space-y-2 list-decimal pl-5 mt-3"><li>Visitor enters an email and a target price on the dashboard.</li><li><span class="mono text-xs">POST /api/watch</span> saves it with a random unsubscribe token.</li><li>The daily job refreshes prices, then <span class="mono text-xs">alerts.check_alerts</span> looks for watches at or above target.</li><li>One email is sent per watch. It is marked done <b>only after the mail server accepts it</b>, so failures retry the next day.</li><li>The link in the email deletes the alert.</li></ol>
+   <p class="text-xs text-slate-500 mt-3">Limits: 10 alerts per email, 10 requests per visitor per hour. Emails are stored only for alerts. Setup is deployment step 8.</p></div>
+  <div class="card p-5"><div class="flex justify-between"><h3>Two shop parsers</h3><span class="chip a">tested on samples</span></div>
+   <p class="text-sm mt-3"><b class="text-slate-50">Amazon.in:</b> reads the title, price and review blocks from the page.</p><p class="text-sm mt-2"><b class="text-slate-50">Flipkart:</b> its page class names are scrambled and change, so the parser reads the structured product data (JSON-LD) the page embeds for search engines.</p>
+   <p class="text-sm mt-2">If a shop blocks the request or changes its layout, the parser raises a clear error. The visitor sees a 502 message, the failure is logged, and sample data is never silently mixed in.</p></div>
+  <div class="card p-5"><div class="flex justify-between"><h3>Monitoring</h3><span class="chip i">system_logs</span></div>
+   <p class="text-sm mt-3">Scraper failures, alert failures and the daily job summary are saved in the <span class="mono text-xs">system_logs</span> table. Read the last 100 with <span class="mono text-xs">GET /api/logs</span> and your <span class="mono text-xs">ADMIN_TOKEN</span>. <span class="mono text-xs">/api/health</span> also reports database status, the model version and whether live scraping is on.</p></div>
+  <div class="card p-5"><div class="flex justify-between"><h3>Connection audit</h3><span class="chip e">runs in CI</span></div>
+   <p class="text-sm mt-3">One command checks that the files agree: frontend calls match backend routes, database models match <span class="mono text-xs">schema.sql</span>, every setting is documented, workflows point at real files and settings, requirements cover every import, and the shipped model loads.</p>
+   <pre class="mt-3">python scripts/verify_project.py
+PASS  every API path the frontend calls exists in the backend
+PASS  database models match schema.sql
+PASS  workflow scrape-daily.yml matches the code and docs
+...
+All checks passed</pre></div>
+ </div>
+</section>
+
+<section id="ml">
+ <h2>5. The ML explained</h2>
+ <div class="plain"><b>In plain words:</b> two readers share the work. A small fast program counts praise and complaints for six parts. A large AI reads the best reviews and writes the verdict. Every Sunday the small program studies new reviews and takes a test. It replaces the old one only if it clearly scores better.</div>
+ <div class="grid md:grid-cols-2 gap-4 mb-4">
+  <div class="card p-5"><div class="flex justify-between"><h3>Reader 1: classifier</h3><span class="chip e">scikit-learn, in the API</span></div><p class="text-sm mt-2">TF-IDF text features plus logistic regression. For each aspect it decides positive, negative, or not mentioned. Runs in milliseconds, free, same answer every time. Produces the aspect bars and example reviews.</p><div class="flex flex-wrap gap-2 mt-3"><span class="chip s">#battery</span><span class="chip s">#display</span><span class="chip s">#performance</span><span class="chip s">#heating</span><span class="chip s">#camera</span><span class="chip s">#value_for_money</span></div></div>
+  <div class="card p-5"><div class="flex justify-between"><h3>Reader 2: Qwen via Groq</h3><span class="chip i">network call</span></div><p class="text-sm mt-2">Gets 30 sample reviews plus the price stats and returns strict JSON: summary, pros, cons, value score, verdict. Never retrained. If the quota runs out or the reply is bad, a local fallback summary appears and the badge says "automatic summary".</p></div>
+ </div>
+ <div class="card p-5 mb-4"><h3>Where training labels come from</h3>
+  <div class="grid md:grid-cols-3 gap-3 mt-3 text-sm" id="labels"></div></div>
+ <div class="card p-5">
+  <h3>Quality gate simulator: champion vs. challenger</h3><p class="text-xs text-slate-500 mb-3">Think of a driving test on the same road. F1-macro is a 0 to 1 accuracy score that treats rare and common cases fairly.</p>
+  <div class="grid md:grid-cols-2 gap-6"><div class="space-y-3 text-sm">
+   <label class="block">Champion F1 <b id="cv" class="mono text-amber-400"></b><input id="champ" type="range" min="60" max="95" value="80" class="w-full accent-amber-400"></label>
+   <label class="block">Challenger F1 <b id="hv" class="mono text-indigo-400"></b><input id="chall" type="range" min="60" max="95" value="82" class="w-full accent-indigo-500"></label>
+   <label class="block">Worst single-aspect drop (points) <b id="dv" class="mono text-red-400"></b><input id="drop" type="range" min="0" max="8" value="1" class="w-full accent-red-400"></label></div>
+   <div><ul id="rules" class="space-y-2 text-sm"></ul><div id="verdict" class="box mt-3 font-medium"></div></div></div>
+ </div>
+</section>
+
+<section id="automation">
+ <h2>6. Automation</h2>
+ <div class="plain"><b>In plain words:</b> GitHub runs four robots for free. One tests every change, one refreshes prices daily, one retrains the model on Sundays, and one keeps the sleepy server awake.</div>
+ <div class="card overflow-x-auto mb-4"><table class="w-full text-sm" id="sched"></table></div>
+ <div id="wf" class="grid md:grid-cols-2 gap-4 mb-4"></div>
+ <div class="card p-5"><h3 class="mb-3">Weekly retrain, in order</h3><ol id="retrain" class="space-y-2 text-sm list-decimal pl-5"></ol></div>
+</section>
+
+<section id="deploy">
+ <h2>7. Deployment guide</h2>
+ <div class="plain"><b>In plain words:</b> you create five free accounts and connect them in order. Each step says what to do, how to check it worked, and what to try if it did not. Ticks are saved in your browser.</div>
+ <div class="card p-4 mb-4"><div class="flex justify-between text-sm mb-2"><span>Progress</span><b id="pct" class="mono text-slate-50"></b></div><div class="h-2 bg-slate-800 rounded-full"><div id="pbar" class="h-2 bg-emerald-400 rounded-full transition-all" style="width:0"></div></div></div>
+ <div id="steps" class="space-y-3"></div>
+</section>
+
+<section id="code">
+ <h2>8. Code map</h2>
+ <div class="plain"><b>In plain words:</b> three folders do three jobs: <b>backend</b> answers requests, <b>frontend</b> is what people see, <b>mlops</b> teaches the model. Open a folder to see its files.</div>
+ <div id="tree" class="space-y-3"></div>
+</section>
+
+<section id="config">
+ <h2>9. Configuration reference</h2>
+ <div class="card overflow-x-auto"><table class="w-full text-sm" id="cfg"><tr><th>Name</th><th>Where</th><th>Default</th><th>Purpose</th></tr></table></div>
+</section>
+
+<section id="trouble">
+ <h2>10. Troubleshooting and operations</h2>
+ <div id="tbl" class="space-y-2 mb-6"></div>
+ <div class="grid md:grid-cols-2 gap-4"><div class="card p-5"><h3 class="mb-2">Rollback</h3><ul class="text-sm space-y-2 list-disc pl-5"><li><b>Bad model:</b> revert the "Weekly retrain" commit on GitHub. Render redeploys the previous model.</li><li><b>Bad code:</b> in Render, open Events and roll back to the previous deploy.</li><li><b>Bad data:</b> DVC can restore an older dataset version.</li></ul></div>
+ <div class="card p-5"><h3 class="mb-2">Routine</h3><ul class="text-sm space-y-2 list-disc pl-5"><li><b>Weekly:</b> glance at the Actions tab for red runs.</li><li><b>Monthly:</b> hand-check about 50 new reviews and add them to the gold set.</li><li><b>Every 50 days:</b> make any commit so GitHub keeps scheduled jobs on.</li></ul></div></div>
+</section>
+
+<section id="limits">
+ <h2>11. Limits and roadmap</h2>
+ <div class="grid md:grid-cols-2 gap-4"><div class="card p-5"><h3 class="text-amber-400 mb-2">Known limits</h3><ul id="lim" class="text-sm space-y-2 list-disc pl-5"></ul></div><div class="card p-5"><h3 class="text-emerald-400 mb-2">Possible next steps</h3><ul id="road" class="text-sm space-y-2 list-disc pl-5"></ul></div></div>
+</section>
+
+<section id="glossary">
+ <h2>12. Glossary</h2><div id="gl" class="grid sm:grid-cols-2 gap-3 mt-4"></div>
+</section>
+ </main>
+</div>
+<footer class="border-t border-slate-800 text-center text-xs text-slate-500 py-6 px-4">Prices and availability fluctuate; data scraped dynamically for educational/demonstration purposes. Not affiliated with Amazon or Flipkart.</footer>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const code=t=>`<div class="relative"><button class="cp absolute right-2 top-2 text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">Copy</button><pre>${esc(t)}</pre></div>`;
+document.addEventListener("click",e=>{const b=e.target.closest(".cp");if(b){navigator.clipboard?.writeText(b.nextElementSibling.textContent);b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1200)}});
+const card=(h,p,c="")=>`<div class="card p-4 ${c}"><b class="text-slate-50 text-sm">${h}</b><p class="text-xs text-slate-400 mt-1">${p}</p></div>`;
+
+/* nav */
+const SEC=[["overview","Overview"],["architecture","Architecture"],["lifecycle","One request"],["api","Data and API"],["features","Features"],["ml","The ML"],["automation","Automation"],["deploy","Deployment guide"],["code","Code map"],["config","Configuration"],["trouble","Troubleshooting"],["limits","Limits and roadmap"],["glossary","Glossary"]];
+$("#side").innerHTML=SEC.map(s=>`<a href="#${s[0]}" data-s="${s[0]}">${s[1]}</a>`).join("");
+$("#topnav").innerHTML=SEC.map(s=>`<a href="#${s[0]}" class="whitespace-nowrap text-slate-400">${s[1]}</a>`).join("");
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)$$("#side a").forEach(a=>a.classList.toggle("on",a.dataset.s==e.target.id))}),{rootMargin:"-30% 0px -60% 0px"});
+SEC.forEach(s=>io.observe($("#"+s[0])));
+
+/* overview */
+$("#stats").innerHTML=[["₹0","monthly cost on free tiers"],["26","automated tests (18 backend, 8 ML) plus a cross-file audit"],["6","API endpoints"],["2","shops: Amazon.in and Flipkart"]].map(s=>`<div class="card p-4"><div class="text-2xl font-bold text-slate-50">${s[0]}</div><div class="text-xs text-slate-400">${s[1]}</div></div>`).join("");
+$("#five").innerHTML=[["Paste","You paste an Amazon.in or Flipkart link."],["Fetch","The server gets price and reviews, or reuses a copy under 24 hours old."],["Count","A small model counts praise and complaints per part."],["Write","A large AI writes the verdict from top reviews."],["Show","One clean dashboard appears."]].map((s,i)=>card(`<span class="chip i mr-2">${i+1}</span>${s[0]}`,s[1])).join("");
+
+/* architecture */
+const NODES=[["n_user",0,50,"User","pastes a link"],["n_fe",250,50,"React + Tailwind","Vercel"],["n_api",500,50,"FastAPI + classifier","Render"],["n_llm",750,50,"Qwen via ChatGroq","verdict writer"],["n_db",500,160,"PostgreSQL","Supabase"],["n_gha",0,360,"GitHub Actions","free scheduler"],["n_pw",250,360,"Daily job","prices, alerts"],["n_tr",500,360,"Retrain job","label, train, gate"],["n_ml",750,360,"MLflow + DVC","DAGsHub"]];
+const INFO=[["Visitor","Pastes a link. No account needed.","Free"],["Frontend","The screen people see. Shows a waking-up message when the server sleeps and pings it on page load.","Vercel hobby tier"],["Backend API","Validates the link, checks the 24h cache, applies the rate limit, runs the classifier, calls Qwen, returns JSON. Loads the champion model from backend/models/champion at startup.","Render free web service, sleeps after about 15 idle minutes"],["Qwen via Groq","Writes summary, pros, cons, value score and verdict. Quota exhaustion triggers the fallback summary.","Groq free tier, rate limited"],["Database","Products, price history, raw reviews, rate-limit counters, and the cached analysis inside the products table.","Supabase free, about 500 MB, pauses after about a week idle"],["GitHub Actions","Runs CI, the daily update, the weekly retrain and the keep-alive ping.","Free for public repos"],["Daily job","Adds a price point and new reviews for every tracked product (Amazon.in and Flipkart when live scraping is on), writes system logs, and emails watchers whose target price was reached.","Runs in Actions"],["Retrain job","Finds new reviews, labels them with Qwen, trains a challenger and runs the quality gate. Commits a promoted model.","Runs in Actions"],["MLflow + DVC","DVC versions the dataset, MLflow logs each run. DAGsHub stores them. Nothing is trained there.","DAGsHub free tier"]];
+$("#nodes").innerHTML=NODES.map((n,i)=>`<g class="nd" id="${n[0]}" data-i="${i}"><rect x="${n[1]}" y="${n[2]}" width="200" height="70" rx="12"/><text x="${n[1]+100}" y="${n[2]+32}" text-anchor="middle" fill="#f8fafc" font-weight="600" font-size="14">${n[3]}</text><text x="${n[1]+100}" y="${n[2]+52}" text-anchor="middle" fill="#64748b" font-size="11">${n[4]}</text></g>`).join("");
+$$(".nd").forEach(g=>g.onclick=()=>{$$(".nd").forEach(x=>x.classList.remove("sel"));g.classList.add("sel");const n=INFO[g.dataset.i];$("#info").innerHTML=`<div class="flex flex-wrap justify-between gap-2"><b class="text-slate-50">${n[0]}</b><span class="chip e">${n[2]}</span></div><p class="mt-2">${n[1]}</p>`});
+function trace(ids,edges){$$(".nd").forEach(x=>x.classList.remove("lit"));ids.forEach((id,i)=>setTimeout(()=>{$$(".nd").forEach(x=>x.classList.remove("lit"));$("#"+id).classList.add("lit");if(edges[i])$("#"+edges[i]).classList.remove("off");if(i==ids.length-1)setTimeout(()=>$("#"+id).classList.remove("lit"),900)},i*750))}
+$("#tReq").onclick=()=>{$$(".flow.bg").forEach(x=>x.classList.add("off"));trace(["n_user","n_fe","n_api","n_db","n_api","n_llm","n_api","n_db","n_api","n_fe"],[])};
+$("#tBg").onclick=()=>{$$(".flow.bg").forEach(x=>x.classList.add("off"));trace(["n_gha","n_pw","n_db","n_tr","n_ml","n_api"],["b1","b2","b3","b4","b5"])};
+
+/* lifecycle */
+const LC=[["Link arrives","The React page sends POST /api/analyze.",0],["Validate","Only amazon.in and flipkart.com. The URL is cleaned so tracking junk does not create duplicates.",0],["Check the cache","Analyzed in the last 24 hours? Return it now.",0],["Rate limit","5 new analyses per visitor per hour, counted in the database by hashed IP.",1],["Fetch data","Sample data, or the live Amazon.in scraper if enabled.",1],["Save","Product, price points and reviews are stored.",1],["Classify","The classifier produces aspect percentages and example reviews.",1],["Write the verdict","Qwen via Groq, or the fallback summary if unavailable.",1],["Respond","The page draws chart, score, verdict, bars and tags.",0]];
+$("#lc").innerHTML=LC.map((s,i)=>`<div class="lc card p-4" id="lc${i}"><div class="mono text-xs text-slate-500">step ${i+1}</div><b class="text-slate-50 text-sm">${s[0]}</b><p class="text-xs text-slate-400 mt-1">${s[1]}</p></div>`).join("");
+function play(cached){$$(".lc").forEach(x=>x.className="lc card p-4");LC.forEach((s,i)=>{if(cached&&s[2]&&i<8)$("#lc"+i).classList.add("skip")});let t=0;LC.forEach((s,i)=>{if(cached&&s[2]&&i<8)return;setTimeout(()=>{$$(".lc").forEach(x=>x.classList.remove("on"));$("#lc"+i).classList.add("on")},t);t+=700})}
+$("#pNew").onclick=()=>play(false);$("#pCache").onclick=()=>play(true);
+
+/* api */
+$("#tables").innerHTML=[["products","id, url (unique), shop, title, category, current_price, analysis_json, analyzed_at, created_at"],["price_history","id, product_id, price, scraped_at"],["raw_reviews","id, product_id, review_text, rating, scraped_at"],["request_counts","client_id (hashed IP), window (hour), count"],["watchlist","id, product_id, email, target_price, token, created_at, notified_at"],["system_logs","id, level, source, message, created_at"]].map(t=>`<div class="card p-4"><b class="mono text-indigo-300 text-sm">${t[0]}</b><p class="mono text-xs text-slate-400 mt-2">${t[1]}</p></div>`).join("");
+const EP=[["POST","/api/analyze","Analyze a product link. Returns cached data when under 24 hours old.",'curl -X POST http://localhost:8000/api/analyze \\\n  -H "Content-Type: application/json" \\\n  -d \'{"url":"https://www.amazon.in/Nova-X-Pro/dp/B0EXAMPLE1"}\'','{ "id": 1, "title": "Orbit 5G 128GB", "shop": "amazon", "current_price": 22999,\n  "price_stats": {"average": 24100, "lowest": 22999, "highest": 26100, "percent_vs_average": -4.6},\n  "price_history": [{"date": "...", "price": 25400}, ...],\n  "analysis": {"verdict": "Buy now: ...", "value_score": 7.8, "source": "qwen",\n    "pros": [...], "cons": [...], "model_version": "20261108-900548d",\n    "aspects": [{"aspect": "heating", "mentions": 12, "positive_pct": 0, "negative_pct": 100, "snippets": [...]}]},\n  "cached": false }'],["GET","/api/products/{id}","Load a saved analysis by id.","curl http://localhost:8000/api/products/1","Same shape as above, with cached: true."],["GET","/api/health","Is the server awake? Used by Render, the keep-alive ping and the page on load.","curl http://localhost:8000/api/health",'{ "status": "ok", "db": true, "llm": "groq", "model": "20261108-900548d", "live_scraping": false }'],
+["POST","/api/watch","Ask for a price-drop email. Same email and product again just updates the target.",'curl -X POST http://localhost:8000/api/watch -H "Content-Type: application/json" \\\n  -d \'{"product_id":1,"email":"you@example.com","target_price":21000}\'','{ "ok": true, "message": "We will email you@example.com when the price drops to ₹21,000 or lower.", "current_price": 22999 }'],
+["GET","/api/unsubscribe?token=...","Link inside every alert email. Deletes that alert and shows a confirmation page.","curl \"http://localhost:8000/api/unsubscribe?token=<token from the email>\"","HTML page: Done. You will not get emails about this product any more."],
+["GET","/api/logs","Last 100 system events. Returns 404 unless ADMIN_TOKEN is set and sent in the X-Admin-Token header.",'curl http://localhost:8000/api/logs -H "X-Admin-Token: <your token>"','[ {"time": "...", "level": "warning", "source": "daily_update", "message": "https://www.flipkart.com/...: HTTP 403"} ]']];
+$("#eps").innerHTML=EP.map(e=>`<details class="card p-4"><summary class="flex flex-wrap items-center gap-3"><span class="chip ${e[0]=="POST"?"i":"e"}">${e[0]}</span><b class="mono text-slate-50 text-sm">${e[1]}</b><span class="text-xs text-slate-400">${e[2]}</span></summary><div class="mt-3 space-y-2"><p class="text-xs text-slate-500">Request</p>${code(e[3])}<p class="text-xs text-slate-500">Response</p>${code(e[4])}</div></details>`).join("");
+
+/* ml */
+$("#labels").innerHTML=[["1. Seed set","About 200 reviews labeled by Qwen with strict JSON, then spot-checked."],["2. Gold set","About 100 reviews you check by hand. Never trained on. This is the real exam, because Qwen's own labels cannot grade Qwen."],["3. Weekly top-up","New reviews are labeled by Qwen. Unclear answers are dropped before training."]].map(s=>`<div class="box s" style="font-family:inherit"><b class="text-slate-50 block mb-1">${s[0]}</b><span class="text-xs text-slate-400">${s[1]}</span></div>`).join("");
+const G=()=>{const c=+$("#champ").value/100,h=+$("#chall").value/100,d=+$("#drop").value;return{c,h,d,r1:h>=c+.01-1e-9,r2:h>=.78-1e-9,r3:d<=3}};
+function gate(){const g=G();$("#cv").textContent=g.c.toFixed(2);$("#hv").textContent=g.h.toFixed(2);$("#dv").textContent=g.d;const L=(o,t)=>`<li class="flex gap-2 ${o?"text-emerald-400":"text-red-400"}"><span>${o?"Pass":"Fail"}</span><span class="text-slate-300">${t}</span></li>`;
+$("#rules").innerHTML=L(g.r1,"Challenger beats champion by at least 0.01")+L(g.r2,"Challenger F1-macro is at least 0.78")+L(g.r3,"No aspect drops more than 3 points");const ok=g.r1&&g.r2&&g.r3,v=$("#verdict");v.className="box mt-3 font-medium "+(ok?"e":"r");v.style.fontFamily="inherit";v.textContent=ok?"Promoted: the model is committed and Render redeploys.":"Rejected: the champion stays in production."}
+["#champ","#chall","#drop"].forEach(s=>$(s).oninput=gate);gate();
+
+/* automation */
+$("#sched").innerHTML='<tr><th>Workflow</th><th>When (IST)</th><th>When (UTC)</th><th>Purpose</th></tr>'+[["CI","every push and pull request","same","Runs 26 tests, builds the frontend and audits that all files agree"],["Daily price and review update","06:00 every day","00:30 daily","Refreshes every tracked product, then sends price-drop emails"],["Weekly retraining","Sunday 05:30","Sunday 00:00","Retrain, gate, promote, deploy"],["Keep backend awake","every 14 minutes","*/14","Stops Render sleeping (needs API_URL variable)"]].map(r=>`<tr><td class="text-slate-50">${r[0]}</td><td>${r[1]}</td><td class="mono text-xs">${r[2]}</td><td class="text-slate-400">${r[3]}</td></tr>`).join("");
+$("#wf").innerHTML=[["ci.yml","Four parallel jobs: backend tests, ML tests, frontend build, and the cross-file audit. A broken change shows a red cross.","none"],["scrape-daily.yml","Runs python -m app.daily_update: refresh prices and reviews, write system logs, send price-drop emails. Fails only if every product failed.","DATABASE_URL, API_URL (variable), optional SMTP_HOST, SMTP_USER, SMTP_PASSWORD, MAIL_FROM, LIVE_SCRAPING"],["retrain-weekly.yml","Pulls data with DVC, runs retrain.py, snapshots data, commits the model, pings the Render hook. Has a manual Run button with a force option.","DATABASE_URL, GROQ_API_KEY, DAGSHUB_USER, DAGSHUB_TOKEN, RENDER_DEPLOY_HOOK_URL"],["keep-alive.yml","Calls /api/health so the free server stays awake.","API_URL (variable)"]].map(w=>`<div class="card p-4"><b class="mono text-indigo-300 text-sm">${w[0]}</b><p class="text-sm mt-1">${w[1]}</p><p class="text-xs text-slate-500 mt-2">Needs: ${w[2]}</p></div>`).join("");
+$("#retrain").innerHTML=["Cron fires and the job starts.","Find reviews in the database that the training set has not seen.","Fewer than 500 new? Stop. The week is skipped (the Run button's force option overrides this).","Qwen labels up to 1,500 new reviews. Unclear labels are dropped.","DVC snapshots the grown dataset to DAGsHub.","Train a challenger. Log scores to MLflow.","Both models take the same gold-set exam. The gate applies its three rules.","Pass: commit the model, trigger Render. Fail: the champion keeps serving and nothing deploys.","Render builds the new copy and moves visitors over only after /api/health answers."].map(t=>`<li>${t}</li>`).join("");
+
+/* deploy */
+const D=[
+["Run it on your laptop first","Catch problems before the internet is involved.",["cd backend && python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt && cp .env.example .env\nuvicorn app.main:app --reload","# new terminal\ncd frontend && npm install && cp .env.example .env && npm run dev"],"Open http://localhost:5173, click an example link, and see a dashboard with aspect bars.","Backend import errors: run pip install again with Python 3.12. Browser blocked: check VITE_API_URL=http://localhost:8000."],
+["Push to GitHub","Everything else deploys from this repository. Use a public repo for free Actions minutes.",["git init && git add . && git commit -m \"DealRadar\"\ngit branch -M main\ngit remote add origin https://github.com/<you>/dealradar.git\ngit push -u origin main"],"The Actions tab shows a CI run. All three jobs turn green.","Red backend job: open it and read the first failing test. Never commit your .env file (it is already in .gitignore)."],
+["Create the database (Supabase)","Free PostgreSQL that keeps data when Render restarts.",["# Supabase dashboard > New project (pick a nearby region, e.g. Mumbai)\n# Project Settings > Database > Connection string > use the Session pooler URI\n# Replace [YOUR-PASSWORD] with your database password"],"Keep the string. It looks like postgresql://postgres.xxxx:PASSWORD@aws-0-ap-south-1.pooler.supabase.com:5432/postgres","If Render cannot connect, use the pooler string (it works over IPv4). The app creates its own tables on first start, so you do not need to run schema.sql."],
+["Get the AI key (Groq)","Lets Qwen write the verdicts.",["# console.groq.com > API Keys > Create\n# Models page: copy the exact Qwen model id and use it as GROQ_MODEL"],"You have a key starting gsk_ and a model id (default qwen/qwen3-32b).","Model name errors appear in Render logs as a Groq 400/404 and the app silently uses the fallback summary. Fix GROQ_MODEL."],
+["Deploy the backend (Render)","Runs the FastAPI server for free.",["# Render > New > Web Service > connect the repo\nRoot Directory:  backend\nBuild Command:   pip install -r requirements.txt\nStart Command:   uvicorn app.main:app --host 0.0.0.0 --port $PORT\nHealth Check:    /api/health\n\n# Environment variables\nPYTHON_VERSION=3.12.7\nDATABASE_URL=<Supabase pooler string>\nGROQ_API_KEY=<key>\nGROQ_MODEL=<model id>\nCORS_ORIGINS=*     # tightened in step 6"],"Open https://<name>.onrender.com/api/health and see {\"status\":\"ok\",\"llm\":\"groq\"}. /docs shows the API explorer.","\"llm\":\"fallback\" means GROQ_API_KEY is missing. A scikit-learn load error means the Python version differs: set PYTHON_VERSION. The first request after idle takes up to about 30 seconds."],
+["Deploy the frontend (Vercel)","Hosts the website on a fast global network.",["# Vercel > Add New > Project > import the repo\nRoot Directory:  frontend      (framework: Vite, auto-detected)\nEnvironment:     VITE_API_URL=https://<name>.onrender.com   # no trailing slash","# Then in Render, set CORS_ORIGINS to your Vercel URL and let it redeploy\nCORS_ORIGINS=https://<project>.vercel.app"],"Open your Vercel URL, paste a link, and get a dashboard. The first try may show the waking-up message.","Browser console says CORS: CORS_ORIGINS does not exactly match the Vercel URL. Network error: VITE_API_URL is wrong or has a trailing slash."],
+["Connect GitHub Actions to the database","Lets the daily job and weekly retrain read your data.",["# GitHub repo > Settings > Secrets and variables > Actions\nSecret:    DATABASE_URL = <Supabase pooler string>\nVariable:  API_URL      = https://<name>.onrender.com","# Actions tab > Daily price and review update > Run workflow\n# Actions tab > Keep backend awake > Run workflow"],"Both runs go green. The daily log prints {'products': N, 'price_points': N, ...}.","Scheduled workflows only run from the default branch. A public repo with no activity for 60 days has schedules disabled by GitHub."],
+["Turn on price-drop emails (optional)","Mail is sent by the daily job in GitHub Actions, so these settings go in GitHub, not Render.",["# Gmail example: Google Account > Security > turn on 2-Step Verification > App passwords > create one\n# GitHub repo > Settings > Secrets and variables > Actions\nSecret:    SMTP_HOST      = smtp.gmail.com\nSecret:    SMTP_USER      = you@gmail.com\nSecret:    SMTP_PASSWORD  = <the 16-character app password>\nSecret:    MAIL_FROM      = DealRadar <you@gmail.com>\nVariable:  SMTP_PORT      = 587     # optional, 587 is the default","# On the live site: analyze a product, set a target ABOVE its current price, press Watch price.\n# Then: Actions tab > Daily price and review update > Run workflow"],"The log shows 'alerts_sent': 1 and the email arrives (check spam). The unsubscribe link in the email works.","'alerts_skipped' means SMTP_HOST or MAIL_FROM is empty. 'alerts_failed' means the mail server refused the login: recheck the app password. Gmail only offers app passwords after 2-Step Verification is on."],
+["Turn on live scraping and the logs page (optional)","Switches from sample data to real Amazon.in and Flipkart pages, and lets you read failures.",["# GitHub > Variables:  LIVE_SCRAPING = true      (daily job)\n# Render > Environment: LIVE_SCRAPING=true       (analyze endpoint)\n# Render > Environment: ADMIN_TOKEN=<long random string>\ncurl https://<name>.onrender.com/api/logs -H \"X-Admin-Token: <your token>\""],"Analyzing a real product link shows real data. Failures appear in /api/logs as warnings instead of breaking the site.","502 'Could not read that product page' means the shop blocked the request or changed its layout. Both are common, especially from GitHub's shared servers. Set LIVE_SCRAPING back to false to return to sample data."],
+["Set up DVC and DAGsHub (data and experiments)","Versions your datasets and logs every training run.",["# dagshub.com > New Repository > Connect a GitHub repo (name it dealradar)\npip install \"dvc>=3\" && dvc init\ndvc remote add origin https://dagshub.com/<user>/dealradar.dvc\ndvc remote default origin\ngit add .dvc && git commit -m \"Set up DVC\" && git push","# GitHub secrets\nDAGSHUB_USER   = <your username>\nDAGSHUB_TOKEN  = <DAGsHub > Settings > Tokens>","# Render > service > Settings > Deploy Hook > copy URL, then add secret\nRENDER_DEPLOY_HOOK_URL = <url>"],"The retrain workflow can now reach DAGsHub. The MLflow tab on DAGsHub will list runs.","If you named the DAGsHub repo something else, edit MLFLOW_TRACKING_URI in retrain-weekly.yml."],
+["Replace the demo model with a real one","The included classifier was trained on synthetic reviews and proves only that the pipeline works.",["# Collect reviews: enable live scraping or add reviews to the database, then\ncd mlops && pip install -r requirements.txt\npython export_reviews.py data/reviews_raw.csv\npython label_reviews.py data/reviews_raw.csv data/train_v1.csv --limit 200","# Hand-label about 100 different reviews into data/gold.csv (same columns). Never train on them.\npython train.py --train data/train_v1.csv --gold data/gold.csv\ngit add data/gold.csv ../backend/models/champion && git commit -m \"First real model\" && git push"],"train.py prints per-aspect scores and PROMOTE. The backend badge shows your new model version after Render redeploys.","REJECT on the first run means F1-macro is below 0.78. Add more labeled reviews, or fix labels, before lowering the bar."],
+["Run the weekly retrain once by hand","Proves the whole loop before you trust the schedule.",["# Actions tab > Weekly retraining > Run workflow > tick force"],"The log shows the new-review count, labeling, gate decision and either a model commit or a clean REJECT.","Skipped with fewer than 500 new reviews is normal. A REJECT is also normal and means the safety gate works."],
+["Final check","Confirm every layer talks to the next.",["curl https://<name>.onrender.com/api/health\ncurl -X POST https://<name>.onrender.com/api/analyze -H \"Content-Type: application/json\" -d '{\"url\":\"https://www.amazon.in/x/dp/B0TEST\"}'"],"Health says ok, analyze returns JSON, the Vercel site shows the dashboard, and CI plus the daily workflow are green.","Use the troubleshooting table below for anything that is off."]];
+let done={};try{done=JSON.parse(localStorage.getItem("dr-done")||"{}")}catch(e){}
+$("#steps").innerHTML=D.map((d,i)=>`<details class="card p-4"><summary class="flex items-center gap-3"><input type="checkbox" class="ck w-4 h-4 accent-emerald-400" data-i="${i}" ${done[i]?"checked":""} aria-label="Mark step ${i+1} done"><span class="chip i">${i+1}</span><b class="text-slate-50">${d[0]}</b><span class="text-xs text-slate-500 hidden sm:inline">${d[1]}</span></summary><div class="mt-4 space-y-3 text-sm"><p class="text-slate-400">${d[1]}</p>${d[2].map(code).join("")}<div class="box e" style="font-family:inherit"><b>Check:</b> ${esc(d[3])}</div><div class="box a" style="font-family:inherit"><b>If it fails:</b> ${esc(d[4])}</div></div></details>`).join("");
+function prog(){const n=D.filter((_,i)=>done[i]).length;$("#pct").textContent=`${n} of ${D.length}`;$("#pbar").style.width=(n/D.length*100)+"%"}
+$$(".ck").forEach(c=>{c.onclick=e=>e.stopPropagation();c.onchange=()=>{done[c.dataset.i]=c.checked;try{localStorage.setItem("dr-done",JSON.stringify(done))}catch(e){}prog()}});prog();
+
+/* code map */
+const T=[["backend/","Answers requests",[["app/main.py","API endpoints, cache, rate limit"],["app/db.py","Database tables"],["app/providers.py","Where product data comes from (sample or live)"],["app/scraper.py","Amazon.in and Flipkart page parsers"],["app/mailer.py, app/alerts.py","SMTP sending and price-drop checks"],["app/llm.py","Qwen call and fallback summary"],["app/classifier.py","Runs the champion model"],["app/daily_update.py","Daily refresh job"],["app/config.py, schemas.py","Settings and response shapes"],["models/champion/","The live model file and its scores"],["tests/","18 tests"],["schema.sql","Same tables as plain SQL"]]],["frontend/","What people see",[["src/App.jsx","Page, form, loading and error states"],["src/api.js","Calls to the backend"],["src/components/Result.jsx","Dashboard layout"],["src/components/PriceChart.jsx","Interactive price chart"],["src/components/Aspects.jsx","Aspect bars and tags"],["src/components/Watch.jsx","Price-drop email form"]]],["mlops/","Teaches the model",[["label_reviews.py","Qwen labels reviews"],["train.py","Trains, tests on gold set, gates, promotes"],["gate.py","The three promotion rules"],["retrain.py","Weekly orchestration"],["export_reviews.py","Dump reviews from the database"],["make_demo_data.py","Synthetic demo data only"],["data/","Training and gold data"],["tests/","8 tests"]]],[".github/workflows/","The robots",[["ci.yml","Tests on every push"],["scrape-daily.yml","Daily update"],["retrain-weekly.yml","Weekly retrain"],["keep-alive.yml","Wake-up ping"]]],["docs/","This page",[["explainable.html","Complete documentation"]]],["scripts/ and Makefile","Helpers",[["scripts/verify_project.py","Checks that routes, tables, settings, workflows, requirements and the model all agree"],["Makefile","make setup, test, verify, backend, frontend"]]]];
+$("#tree").innerHTML=T.map(t=>`<details class="card p-4"><summary class="flex justify-between"><b class="mono text-indigo-300">${t[0]}</b><span class="text-xs text-slate-400">${t[1]}</span></summary><table class="w-full text-sm mt-3">${t[2].map(f=>`<tr><td class="mono text-xs text-slate-200 w-1/3">${f[0]}</td><td class="text-slate-400">${f[1]}</td></tr>`).join("")}</table></details>`).join("");
+
+/* config */
+$("#cfg").insertAdjacentHTML("beforeend",[["DATABASE_URL","Render, GitHub secret","sqlite file","Where data lives (Supabase in production)"],["GROQ_API_KEY","Render, GitHub secret","empty","Empty means fallback summaries"],["GROQ_MODEL","Render","qwen/qwen3-32b","Exact model id from the Groq console"],["CACHE_HOURS","Render","24","How long an analysis is reused"],["RATE_LIMIT_PER_HOUR","Render","5","New analyses per visitor per hour"],["CORS_ORIGINS","Render","*","Your Vercel URL in production"],["LIVE_SCRAPING","Render, GitHub variable","false","true = real Amazon.in pages, else sample data"],["MODEL_PATH","Render","models/champion/model.joblib","Override the model file location"],["PYTHON_VERSION","Render","platform default","Set 3.12.7 so the model loads"],["VITE_API_URL","Vercel","http://localhost:8000","Backend URL, no trailing slash"],["API_URL","GitHub variable","none","For the keep-alive ping"],["DAGSHUB_USER, DAGSHUB_TOKEN","GitHub secrets","none","DVC and MLflow login"],["RENDER_DEPLOY_HOOK_URL","GitHub secret","none","Optional explicit redeploy"],["MIN_NEW_REVIEWS","retrain job","500","Skip the week below this"],["MAX_LABEL_PER_RUN","retrain job","1500","Protects the Groq quota"],["WATCH_LIMIT_PER_HOUR","Render","10","Price alerts per visitor per hour"],["SMTP_HOST, SMTP_USER, SMTP_PASSWORD","GitHub secrets (daily job)","empty","Mail account. Empty disables sending"],["SMTP_PORT","GitHub variable","587","465 uses SSL"],["MAIL_FROM","GitHub secret","empty","Sender shown on emails"],["PUBLIC_API_URL","GitHub (set from API_URL)","http://localhost:8000","Base of the unsubscribe link"],["ADMIN_TOKEN","Render","empty","Enables GET /api/logs"],["FORCE","retrain job","empty","Retrain even under 500 new reviews"],["MLFLOW_TRACKING_URI","retrain job","none","Where runs are logged (DAGsHub)"],["MLFLOW_TRACKING_USERNAME, MLFLOW_TRACKING_PASSWORD","retrain job","none","DAGsHub login for MLflow"]].map(r=>`<tr><td class="mono text-xs text-indigo-300">${r[0]}</td><td class="text-slate-400">${r[1]}</td><td class="mono text-xs">${r[2]}</td><td>${r[3]}</td></tr>`).join(""));
+
+/* troubleshooting */
+$("#tbl").innerHTML=[["First request takes 30 seconds","Render's free server was asleep. Normal. The page shows a waiting message, and the keep-alive workflow reduces it."],["Browser says CORS error","CORS_ORIGINS on Render must equal your Vercel URL exactly, with no trailing slash. Redeploy after changing it."],["Badge says \"automatic summary\"","Groq key missing, wrong model id, or quota used up. Check Render logs for the Groq error."],["No aspect bars on a product","No champion model loaded (check the Render logs), or fewer than 3 reviews mention each aspect."],["Model fails to load after deploy","scikit-learn version mismatch. Both requirements files pin the same version; set PYTHON_VERSION=3.12.7 on Render."],["Database connection fails","Use Supabase's Session pooler string. Check the password and that the project is not paused."],["429 Limit reached","Working as designed: 5 new analyses per hour. Raise RATE_LIMIT_PER_HOUR if needed."],["502 on analyze","Live scraping is on and the shop blocked the request, or the page layout changed. Switch LIVE_SCRAPING off to use sample data."],["Scheduled workflows stopped","GitHub disables them after 60 days without repo activity. Make a commit, then re-enable in the Actions tab."],["Retrain says skipped","Fewer than 500 new reviews. Wait, lower MIN_NEW_REVIEWS, or run manually with force."],["Retrain says REJECT","The safety gate worked: the new model was not clearly better. The champion keeps serving."],["Price-drop email never arrives","Open the daily workflow log. alerts_skipped means SMTP settings are empty, alerts_failed means the mail server refused (recheck the app password). Also check spam. Alerts only go out when the daily job runs and the price is at or below the target."],["Flipkart analysis returns 502","Flipkart blocked the request or changed its page data. GET /api/logs shows the exact reason. The parser reads schema.org JSON-LD data, so it needs updating if Flipkart removes it."],["/api/logs returns 404","By design: it is off until ADMIN_TOKEN is set, and the X-Admin-Token header must match."],["CI verify job fails","The audit found two files that disagree, for example a new setting that is not documented. The message names the exact mismatch. Run python scripts/verify_project.py locally."]].map(r=>`<details class="card px-4 py-3"><summary class="flex justify-between gap-3 text-sm"><span class="text-slate-50">${r[0]}</span><span class="text-slate-500">+</span></summary><p class="text-sm text-slate-400 mt-2">${r[1]}</p></details>`).join("");
+
+/* limits / roadmap / glossary */
+$("#lim").innerHTML=["Sample data until live scraping is on. The Amazon.in and Flipkart parsers are tested on saved page samples only, can break when pages change, and shops may block them or forbid scraping in their terms.","Alerts go out from the daily job, so an email arrives at most once a day. Free mail accounts have sending caps and may land in spam.","The demo model is trained on synthetic reviews. Real accuracy is unknown until you build a hand-checked gold set.","Qwen-made labels can contain mistakes, and the model can learn them. Spot-check monthly.","The rate limit uses IP addresses, which can be shared or spoofed. Fine at small scale.","Free tiers change. Verify limits and prices for Render, Supabase, Groq, Vercel and DAGsHub."].map(t=>`<li>${t}</li>`).join("");
+$("#road").innerHTML=["Playwright fallback for pages that need a real browser","Model-drift charts built on the system_logs table","Hourly alert checks with a dedicated mail service","More categories beyond phones and laptops","A custom domain and a short architecture video for the README"].map(t=>`<li>${t}</li>`).join("");
+$("#gl").innerHTML=[["API","A menu of requests one program can make to another."],["Backend / Frontend","The kitchen (logic and data) and the dining room (what you see)."],["Cache","A saved answer reused instead of redoing the work."],["Cold start","A sleeping free server needs about 30 seconds to wake up."],["Classifier","A program that sorts text into labels, here positive, negative or not mentioned."],["F1 score","A 0 to 1 accuracy grade that is fair to rare cases."],["Gold set","A small test set checked by humans and never used for training."],["Champion / Challenger","The model in production and the new one trying to replace it."],["Quality gate","The rules a challenger must pass before it ships."],["DVC","Git for datasets: every model can point to the exact data it learned from."],["MLflow","A lab notebook that records every training run's settings and scores."],["CI","Automatic tests that run on every change."],["Cron","A schedule written as five fields, such as 0 0 * * 0 for Sunday midnight."],["Rate limit","A cap on how many requests one visitor can make per hour."],["SMTP","The standard way programs hand an email to a mail server."],["JSON-LD","Facts about a page (name, price) that shops embed as data for search engines. The Flipkart parser reads this."],["Unsubscribe token","A random secret in each email link so only the recipient can cancel that alert."],["Audit script","A program that checks that all project files agree with each other."]].map(g=>card(g[0],g[1])).join("");
+</script>
+</body>
+</html>
