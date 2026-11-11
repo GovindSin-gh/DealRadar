@@ -7,6 +7,9 @@ heating, camera, value_for_money), predicts positive / negative / none. The back
 `make_demo_data.py` creates SYNTHETIC templated reviews, so the included model and its F1 score only prove the pipeline works. Train on real data before trusting it.
 
 ## Real workflow
+Shop pages rarely give enough reviews. The easiest source is a public review dataset (check its licence):
+`python import_dataset.py --src reviews.csv --text-col "Review text" --out data/reviews_raw.csv --limit 3000`, and for the gold set add `--exclude data/reviews_raw.csv`.
+
 ```bash
 cd mlops && pip install -r requirements.txt
 python export_reviews.py data/reviews_raw.csv                 # reviews from your database
