@@ -22,6 +22,10 @@ export async function analyze(url) {
     } catch {}
     throw new Error(msg);
   }
+  if (res.status === 202) {  // a worker is fetching the page: the caller asks again after retryAfter seconds
+    const j = await res.json();
+    return { pending: true, message: j.message, retryAfter: j.retry_after || 8 };
+  }
   return res.json();
 }
 
