@@ -14,6 +14,7 @@ export default function App() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [secs, setSecs] = useState(0);
+  const [pending, setPending] = useState("");
 
   useEffect(() => { ping(); }, []);
   useEffect(() => {
@@ -26,8 +27,18 @@ export default function App() {
   async function submit(e) {
     e.preventDefault();
     if (state === "loading") return;
-    setState("loading"); setError("");
-    try { setData(await analyze(url)); setState("done"); }
+    setState("loading"); setError(""); setPending("");
+    try {
+      const deadline = Date.now() + 4 * 60 * 1000;
+      let r = await analyze(url);
+      while (r.pending) {  // the page is being fetched by a background worker: ask again until it is ready
+        if (Date.now() > deadline) throw new Error("This is taking longer than expected. Please try again in a few minutes.");
+        setPending(r.message);
+        await new Promise((ok) => setTimeout(ok, r.retryAfter * 1000));
+        r = await analyze(url);
+      }
+      setData(r); setState("done");
+    }
     catch (x) { setError(x.message); setState("error"); }
   }
 
@@ -67,8 +78,8 @@ export default function App() {
               <div className="h-1.5 bg-slate-800 rounded-full mb-4 overflow-hidden">
                 <div className="h-1.5 bg-indigo-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(95, 10 + secs * 8)}%` }} />
               </div>
-              <p className="font-mono text-sm text-indigo-400">{STEPS[Math.min(Math.floor(secs / 2), STEPS.length - 1)]}...</p>
-              {secs >= 5 && <p className="mt-3 text-sm text-amber-400">Waking up backend server, please wait 30s... (the free server sleeps when idle)</p>}
+              <p className="font-mono text-sm text-indigo-400">{pending || `${STEPS[Math.min(Math.floor(secs / 2), STEPS.length - 1)]}...`}</p>
+              {!pending && secs >= 5 && <p className="mt-3 text-sm text-amber-400">Waking up backend server, please wait 30s... (the free server sleeps when idle)</p>}
             </div>
           )}
           {state === "error" && (
