@@ -21,9 +21,12 @@ GitHub Actions: daily update | weekly retrain -> DVC + MLflow (DAGsHub) -> quali
 
 ## Honest status
 - **Data is sample data by default.** Set `LIVE_SCRAPING=true` for best-effort Amazon.in and Flipkart parsing. Both parsers are tested on saved page samples only. Shops block bots and GitHub's IP addresses are often blocked, so expect failures, and check each site's terms first.
-- **Reviews:** shop pages often show a program few or no reviews. Then the verdict is labeled "price only". Train the classifier on a public review dataset (`mlops/import_dataset.py`), not on scraped pages.
+- **Reviews:** Amazon shows logged-out visitors only about 8 to 13 top reviews and keeps the rest behind a sign-in; DealRadar does not log in. Shop pages often show a program few or no reviews. Then the verdict is labeled "price only". Train the classifier on a public review dataset (`mlops/import_dataset.py`), not on scraped pages.
 - **Price-drop emails** need an SMTP account (a Gmail app password works). Without one the daily job skips sending and retries once it is configured.
 - **The included model is a demo** trained on synthetic reviews. Replace it with real data (see `mlops/README.md`).
+
+## Shops that refuse the server (HTTP 429)
+Set `QUEUE_SHOPS=flipkart`, `GITHUB_REPO` and `GITHUB_DISPATCH_TOKEN` on Render. The API then starts the `scrape-on-demand.yml` workflow, the page waits, and the worker saves the product. Without a token the request waits for the daily job. See step 10 of `docs/explainable.html`. This changes where the request comes from; it does not hide it, so the shop may refuse GitHub too.
 
 ## Features
 Price and review analysis, aspect bars from a trained classifier, Qwen verdicts, price history chart, price-drop email alerts with unsubscribe links, Amazon.in and Flipkart parsers, database-backed rate limits, system logs (`GET /api/logs`), daily and weekly automation, and a cross-file audit (`make verify`).
@@ -50,6 +53,8 @@ Price and review analysis, aspect bars from a trained classifier, Qwen verdicts,
 | `RENDER_DEPLOY_HOOK_URL` | secret, optional | deploy after a new model |
 | `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | secrets, optional | price-drop emails (daily job) |
 | `SMTP_PORT` | variable, optional | mail port, default 587 |
+| `GROQ_MODEL` | variable, optional | model id used by the on-demand worker |
+| `LLM_EXTRACT_FALLBACK` | variable, optional | let Qwen read title/price when selectors fail (default true) |
 | `API_URL` | variable | keep-alive ping |
 | `LIVE_SCRAPING` | variable, optional | daily update |
 
