@@ -21,6 +21,7 @@ GitHub Actions: daily update | weekly retrain -> DVC + MLflow (DAGsHub) -> quali
 
 ## Honest status
 - **Data is sample data by default.** Set `LIVE_SCRAPING=true` for best-effort Amazon.in and Flipkart parsing. Both parsers are tested on saved page samples only. Shops block bots and GitHub's IP addresses are often blocked, so expect failures, and check each site's terms first.
+- **Reviews:** shop pages often show a program few or no reviews. Then the verdict is labeled "price only". Train the classifier on a public review dataset (`mlops/import_dataset.py`), not on scraped pages.
 - **Price-drop emails** need an SMTP account (a Gmail app password works). Without one the daily job skips sending and retries once it is configured.
 - **The included model is a demo** trained on synthetic reviews. Replace it with real data (see `mlops/README.md`).
 
