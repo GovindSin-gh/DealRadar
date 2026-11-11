@@ -31,6 +31,7 @@ export default function Result({ data }) {
   const shop = data.shop === "amazon" ? "Amazon.in" : "Flipkart";
   return (
     <div className="grid md:grid-cols-12 gap-4">
+      {data.notice && <div className="md:col-span-12 bg-amber-400/10 border border-amber-400/30 text-amber-400 rounded-2xl p-4 text-sm" role="status">{data.notice}</div>}
       <Card className="md:col-span-8">
         <div className="flex flex-wrap justify-between gap-3">
           <div>
@@ -49,7 +50,7 @@ export default function Result({ data }) {
       </Card>
 
       <Card className="md:col-span-4 flex flex-col items-center justify-center text-center">
-        <p className="text-xs text-slate-500 mb-1">Value score</p>
+        <p className="text-xs text-slate-500 mb-1">{a.price_only ? "Price-based score" : "Value score"}</p>
         <Ring score={a.value_score} />
         <p className="text-xs text-slate-400 mt-1">Out of 10</p>
       </Card>
@@ -58,7 +59,7 @@ export default function Result({ data }) {
         <div className="flex flex-wrap justify-between gap-2 mb-2">
           <h3 className="text-slate-50 font-semibold">Verdict</h3>
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-mono ring-1 ${a.source === "qwen" ? "bg-indigo-500/10 text-indigo-300 ring-indigo-500/30" : "bg-amber-400/10 text-amber-400 ring-amber-400/30"}`}>
-            {a.source === "qwen" ? "written by Qwen AI" : "automatic summary"}
+            {(a.source === "qwen" ? "written by Qwen AI" : "automatic summary") + (a.price_only ? " · price only, no reviews found" : "")}
           </span>
         </div>
         <p className="text-slate-50 font-medium">{a.verdict}</p>
