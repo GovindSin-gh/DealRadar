@@ -1,0 +1,32 @@
+name: Scrape one product (on demand)
+# Started by the API (GitHub dispatch API) when a visitor asks for a shop that refuses our web server.
+# Can also be run by hand: Actions tab > this workflow > Run workflow > paste a product link.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Product link (amazon.in or flipkart.com)"
+        required: true
+        type: string
+concurrency:
+  group: scrape-on-demand
+  cancel-in-progress: false
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: backend/requirements.txt }
+      - run: pip install -r backend/requirements.txt
+      - name: Fetch the page and save it to the database
+        working-directory: backend
+        env:
+          URL: ${{ inputs.url }}   # passed as an environment variable, never pasted into the shell command
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          LIVE_SCRAPING: "true"
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL }}
+          LLM_EXTRACT_FALLBACK: ${{ vars.LLM_EXTRACT_FALLBACK || 'true' }}
+        run: python -m app.scrape_job --url "$URL"
