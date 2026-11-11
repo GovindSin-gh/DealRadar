@@ -59,3 +59,58 @@ def test_logs_endpoint_needs_admin_token(client, monkeypatch):
     assert client.get("/api/logs", headers={"X-Admin-Token": "wrong"}).status_code == 404
     r = client.get("/api/logs", headers={"X-Admin-Token": "secret-token"})
     assert r.status_code == 200 and r.json()[0]["message"]
+
+
+def test_stale_analysis_is_served_with_notice_when_refresh_is_blocked(client, monkeypatch):
+    from datetime import timedelta
+    from app import providers, scraper
+    url = "https://www.amazon.in/Stale/dp/B0STALE001"
+    first = client.post("/api/analyze", json={"url": url}).json()
+    with SessionLocal() as db:  # pretend the saved analysis is two days old
+        p = db.get(Product, first["id"])
+        p.analyzed_at = p.analyzed_at - timedelta(days=2)
+        db.commit()
+    monkeypatch.setattr(providers.settings, "live_scraping", True)
+    def refuse(u): raise scraper.Blocked("HTTP 403")
+    monkeypatch.setattr(scraper, "fetch_amazon", refuse)
+    r = client.post("/api/analyze", json={"url": url})
+    assert r.status_code == 200 and "last saved analysis" in r.json()["notice"] and r.json()["id"] == first["id"]
+
+
+def test_product_without_reviews_is_marked_price_only(client, monkeypatch):
+    from app import providers
+    def no_reviews(url, shop):
+        return providers.ProductData("Bare Phone 5G", shop, "smartphone", 19999.0, [(2, 21000.0), (1, 20500.0), (0, 19999.0)], [])
+    monkeypatch.setattr(providers, "fetch_product", no_reviews)
+    d = client.post("/api/analyze", json={"url": "https://www.amazon.in/Bare/dp/B0NOREV001"}).json()
+    assert d["review_count"] == 0 and d["analysis"]["price_only"] is True
+    assert "price only" in d["analysis"]["summary"] and d["analysis"]["aspects"] == []
+
+
+def test_daily_job_stops_hitting_a_shop_that_refuses(client, monkeypatch):
+    from app import daily_update, providers
+    client.post("/api/analyze", json={"url": "https://www.amazon.in/Gate/dp/B0GATE0001"})
+    client.post("/api/analyze", json={"url": "https://www.amazon.in/Gate/dp/B0GATE0002"})
+    calls = []
+    def refuse(url, shop):
+        calls.append(shop)
+        raise providers.ScrapeError("HTTP 403", blocked=True)
+    monkeypatch.setattr(providers, "fetch_product", refuse)
+    with SessionLocal() as db:
+        stats = daily_update.run(db)
+    assert calls.count("amazon") == 1 and stats["skipped_blocked"] >= 1  # asked once, then left alone
+
+
+def test_daily_job_adds_a_point_after_12_hours(client):
+    from datetime import timedelta
+    from app import daily_update
+    from app.db import PriceHistory
+    p = client.post("/api/analyze", json={"url": "https://www.amazon.in/Twelve/dp/B0TWELVE01"}).json()
+    with SessionLocal() as db:
+        for h in db.scalars(select(PriceHistory).where(PriceHistory.product_id == p["id"])):
+            h.scraped_at = h.scraped_at - timedelta(hours=13)
+        db.commit()
+        before = len(db.scalars(select(PriceHistory).where(PriceHistory.product_id == p["id"])).all())
+        daily_update.run(db)
+        after = len(db.scalars(select(PriceHistory).where(PriceHistory.product_id == p["id"])).all())
+    assert after == before + 1
