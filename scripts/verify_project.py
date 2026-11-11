@@ -77,7 +77,7 @@ check("frontend/.env.example defines VITE_API_URL", "VITE_API_URL" in (FRONTEND 
 
 # ---------------------------------------------------------------- 4. workflows <-> files, settings, docs
 code_env = backend_env | mlops_env
-allow = {"MLFLOW_TRACKING_USERNAME", "MLFLOW_TRACKING_PASSWORD", "DAGSHUB_USER", "DAGSHUB_TOKEN", "HOOK", "API_URL", "GITHUB_OUTPUT"}
+allow = {"MLFLOW_TRACKING_USERNAME", "MLFLOW_TRACKING_PASSWORD", "DAGSHUB_USER", "DAGSHUB_TOKEN", "HOOK", "API_URL", "GITHUB_OUTPUT", "URL"}
 wf_dir = ROOT / ".github" / "workflows"
 for wf in sorted(wf_dir.glob("*.yml")):
     d = yaml.safe_load(wf.read_text())
