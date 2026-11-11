@@ -49,3 +49,12 @@ create table if not exists system_logs (
   message text not null,
   created_at timestamp not null default now()
 );
+create table if not exists scrape_requests (
+  id serial primary key,
+  url text unique not null,
+  shop text not null,
+  status text not null default 'pending',
+  error text,
+  requested_at timestamp not null default now(),
+  finished_at timestamp
+);
