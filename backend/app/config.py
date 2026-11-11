@@ -20,6 +20,8 @@ class Settings:
     mail_from: str = os.getenv("MAIL_FROM", "")
     public_api_url: str = os.getenv("PUBLIC_API_URL", "http://localhost:8000").rstrip("/")
     admin_token: str = os.getenv("ADMIN_TOKEN", "")
+    daily_delay_seconds: float = float(os.getenv("DAILY_DELAY_SECONDS", "3"))
+    llm_extract_fallback: bool = os.getenv("LLM_EXTRACT_FALLBACK", "true").lower() == "true"
     cache_hours: int = int(os.getenv("CACHE_HOURS", "24"))
     cors_origins: list[str] = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",")]
 
