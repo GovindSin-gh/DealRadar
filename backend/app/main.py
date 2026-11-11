@@ -9,11 +9,11 @@ from secrets import token_urlsafe
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy import delete, func, select, text
 from sqlalchemy.orm import Session
 
-from . import classifier, llm, providers
+from . import classifier, llm, providers, scrape_queue, store
 from .config import settings
 from .db import Base, PriceHistory, Product, RawReview, RequestCount, SystemLog, Watch, engine, get_db, log_event, utcnow
 from .schemas import AnalyzeRequest, ProductOut, WatchOut, WatchRequest
@@ -84,7 +84,8 @@ def health(db: Session = Depends(get_db)):
             "model": art.get("version") if art else None, "live_scraping": settings.live_scraping}
 
 
-@app.post("/api/analyze", response_model=ProductOut)
+@app.post("/api/analyze", response_model=ProductOut,
+          responses={202: {"description": "Queued: a worker is fetching the page. Ask again after retry_after seconds."}})
 def analyze(req: AnalyzeRequest, request: Request, db: Session = Depends(get_db)):
     parsed = providers.parse_url(req.url)
     if not parsed:
@@ -96,27 +97,28 @@ def analyze(req: AnalyzeRequest, request: Request, db: Session = Depends(get_db)
     if fresh:
         return _response(product, db, cached=True)
 
-    _check_rate_limit(db, _client_id(request), settings.rate_limit_per_hour, "new analyses",
-                      f"Products analyzed in the last {settings.cache_hours}h still load instantly. ")
-    try:
-        data = providers.fetch_product(url, shop)
-    except providers.ScrapeError as e:
-        log_event(db, "warning", "analyze", f"{url}: {e}")
-        if product is not None and product.analysis_json:  # keep serving what we already have
-            out = _response(product, db, cached=True)
-            out["notice"] = "The shop would not let us refresh this product right now, so this is the last saved analysis."
-            return out
-        raise HTTPException(502, f"Could not read that product page right now ({e}). Please try again later.")
-    if product is None:
-        product = Product(url=url, shop=shop, title=data.title, category=data.category, current_price=data.price)
-        db.add(product)
-        db.flush()
-        db.add_all(PriceHistory(product_id=product.id, price=p, scraped_at=providers.history_dates(d)) for d, p in data.history)
-        db.add_all(RawReview(product_id=product.id, review_text=t, rating=r) for t, r in data.reviews)
-    else:
-        product.current_price = data.price
-        db.add(PriceHistory(product_id=product.id, price=data.price))
-    db.flush()
+    client = _client_id(request)
+    limit = lambda: _check_rate_limit(db, client, settings.rate_limit_per_hour, "new analyses",
+                                      f"Products analyzed in the last {settings.cache_hours}h still load instantly. ")
+    queued = settings.live_scraping and shop in settings.queue_shops  # this shop is fetched by the GitHub worker
+    if queued and product is None:
+        status, message = scrape_queue.request_scrape(db, url, shop, limit)
+        if status == "failed":
+            raise HTTPException(502, f"Could not read that product page right now ({message}). Please try again later.")
+        return JSONResponse(status_code=202, content={"status": "pending", "message": message, "retry_after": 8})
+
+    limit()
+    if not queued:  # queued shops: the worker already saved the data, we only analyze it
+        try:
+            data = providers.fetch_product(url, shop)
+        except providers.ScrapeError as e:
+            log_event(db, "warning", "analyze", f"{url}: {e}")
+            if product is not None and product.analysis_json:  # keep serving what we already have
+                out = _response(product, db, cached=True)
+                out["notice"] = "The shop would not let us refresh this product right now, so this is the last saved analysis."
+                return out
+            raise HTTPException(502, f"Could not read that product page right now ({e}). Please try again later.")
+        product = store.save_product_data(db, url, shop, data)
 
     prices = [h.price for h in db.scalars(select(PriceHistory).where(PriceHistory.product_id == product.id))]
     reviews = [(r.review_text, r.rating) for r in db.scalars(select(RawReview).where(RawReview.product_id == product.id))]
