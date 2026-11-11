@@ -80,7 +80,9 @@ def history_dates(days_ago: int):
 
 
 class ScrapeError(Exception):
-    pass
+    def __init__(self, message: str, blocked: bool = False):
+        super().__init__(message)
+        self.blocked = blocked  # True: the shop refused us, so stop asking it for a while
 
 
 def fetch_product(url: str, shop: str) -> ProductData:
@@ -92,5 +94,5 @@ def fetch_product(url: str, shop: str) -> ProductData:
         d = fetchers[shop](url)
     except scraper.ScrapeError as e:
         logging.getLogger("dealradar.providers").warning("live scrape failed for %s: %s", url, e)
-        raise ScrapeError(str(e)) from e
+        raise ScrapeError(str(e), blocked=isinstance(e, scraper.Blocked)) from e
     return ProductData(d["title"], shop, d["category"], d["price"], [(0, d["price"])], d["reviews"])
