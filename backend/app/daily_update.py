@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from sqlalchemy import select
 
-from . import alerts, providers
+from . import alerts, providers, scrape_job
 from .config import settings
 from .db import Base, PriceHistory, Product, RawReview, SessionLocal, engine, log_event, utcnow
 
@@ -18,6 +18,7 @@ log = logging.getLogger("dealradar.daily")
 def run(db, force: bool = False) -> dict:
     stats = {"products": 0, "price_points": 0, "new_reviews": 0, "failed": 0, "skipped_blocked": 0}
     blocked_shops: set[str] = set()  # a shop that refused us once is left alone for the rest of the run
+    stats["queued_done"] = scrape_job.process_pending(db, blocked_shops)  # requests nobody started
     for p in db.scalars(select(Product)).all():
         stats["products"] += 1
         if p.shop in blocked_shops:
