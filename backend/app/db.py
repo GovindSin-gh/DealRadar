@@ -81,6 +81,18 @@ class SystemLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
+class ScrapeRequest(Base):
+    """A product the visitor asked for that a GitHub Actions worker must fetch (see scrape_queue.py)."""
+    __tablename__ = "scrape_requests"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    url: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    shop: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[str] = mapped_column(String, nullable=False, default="pending")  # pending | done | failed
+    error: Mapped[str | None] = mapped_column(Text)
+    requested_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
 def log_event(db, level: str, source: str, message: str) -> None:
     db.add(SystemLog(level=level, source=source, message=message[:1000]))
     db.commit()
