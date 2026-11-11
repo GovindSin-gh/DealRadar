@@ -102,6 +102,10 @@ def analyze(req: AnalyzeRequest, request: Request, db: Session = Depends(get_db)
         data = providers.fetch_product(url, shop)
     except providers.ScrapeError as e:
         log_event(db, "warning", "analyze", f"{url}: {e}")
+        if product is not None and product.analysis_json:  # keep serving what we already have
+            out = _response(product, db, cached=True)
+            out["notice"] = "The shop would not let us refresh this product right now, so this is the last saved analysis."
+            return out
         raise HTTPException(502, f"Could not read that product page right now ({e}). Please try again later.")
     if product is None:
         product = Product(url=url, shop=shop, title=data.title, category=data.category, current_price=data.price)
