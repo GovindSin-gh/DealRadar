@@ -34,6 +34,7 @@ class Analysis(BaseModel):
     value_score: float
     verdict: str
     source: str  # "qwen" or "fallback"
+    price_only: bool = False  # True when no reviews were found
     aspects: list[AspectOut] = []
     model_version: str | None = None
 
@@ -51,6 +52,7 @@ class ProductOut(BaseModel):
     analysis: Analysis
     analyzed_at: datetime
     cached: bool
+    notice: str | None = None  # shown when we could not refresh and return the last saved analysis
 
 
 class WatchRequest(BaseModel):
