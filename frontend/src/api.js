@@ -47,3 +47,23 @@ export async function watch(productId, email, targetPrice) {
   }
   return j.message;
 }
+
+// Reviews the visitor copied from the shop page. The server saves them and returns the updated analysis.
+export async function addReviews(productId, text) {
+  let res;
+  try {
+    res = await fetch(`${BASE}/api/reviews`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ product_id: productId, text }),
+    });
+  } catch {
+    throw new Error("Cannot reach the server. Please try again in a moment.");
+  }
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const d = j.detail;
+    throw new Error(typeof d === "string" ? d : Array.isArray(d) ? "Please paste a bit more text (at least a few lines)." : "Something went wrong.");
+  }
+  return j;
+}
