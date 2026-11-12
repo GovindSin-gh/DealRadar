@@ -45,7 +45,7 @@ def process_pending(db, blocked_shops: set) -> int:
         return 0
     done = 0
     for req in db.scalars(select(ScrapeRequest).where(ScrapeRequest.status == "pending")).all():
-        if req.shop in blocked_shops:
+        if req.shop in blocked_shops or req.shop not in settings.enabled_shops:
             continue
         result = run(db, req.url)
         done += result["ok"]
