@@ -28,6 +28,7 @@ class Settings:
     github_dispatch_token: str = os.getenv("GITHUB_DISPATCH_TOKEN", "")  # fine-grained token, Actions: read and write, this repo only
     github_ref: str = os.getenv("GITHUB_BRANCH") or "main"
     scrape_workflow: str = os.getenv("SCRAPE_WORKFLOW", "scrape-on-demand.yml")
+    enabled_shops: list[str] = [s.strip().lower() for s in os.getenv("ENABLED_SHOPS", "amazon").split(",") if s.strip()]
     cache_hours: int = int(os.getenv("CACHE_HOURS", "24"))
     cors_origins: list[str] = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",")]
 
