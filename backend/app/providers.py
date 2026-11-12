@@ -26,6 +26,8 @@ class ProductData:
     price: float
     history: list[tuple[int, float]]  # (days_ago, price)
     reviews: list[tuple[str, int]]  # (text, rating 1-5)
+    page_summary: str = ""  # the shop's own customer-feedback summary (Amazon 'Customers say'), if the page has one
+    diag: str = ""  # what the parser saw, written to the logs when no reviews were found
 
 
 def parse_url(url: str) -> tuple[str, str] | None:
@@ -95,4 +97,5 @@ def fetch_product(url: str, shop: str) -> ProductData:
     except scraper.ScrapeError as e:
         logging.getLogger("dealradar.providers").warning("live scrape failed for %s: %s", url, e)
         raise ScrapeError(str(e), blocked=isinstance(e, scraper.Blocked)) from e
-    return ProductData(d["title"], shop, d["category"], d["price"], [(0, d["price"])], d["reviews"])
+    return ProductData(d["title"], shop, d["category"], d["price"], [(0, d["price"])], d["reviews"],
+                       d.get("page_summary", ""), d.get("diag", ""))
