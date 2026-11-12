@@ -20,6 +20,8 @@ def run(db, force: bool = False) -> dict:
     blocked_shops: set[str] = set()  # a shop that refused us once is left alone for the rest of the run
     stats["queued_done"] = scrape_job.process_pending(db, blocked_shops)  # requests nobody started
     for p in db.scalars(select(Product)).all():
+        if p.shop not in settings.enabled_shops:  # a paused shop is left completely alone
+            continue
         stats["products"] += 1
         if p.shop in blocked_shops:
             stats["skipped_blocked"] += 1
