@@ -34,7 +34,8 @@ class Analysis(BaseModel):
     value_score: float
     verdict: str
     source: str  # "qwen" or "fallback"
-    price_only: bool = False  # True when no reviews were found
+    price_only: bool = False  # True when neither reviews nor a shop summary were found
+    page_summary_used: bool = False  # verdict based on the shop's own customer summary
     aspects: list[AspectOut] = []
     model_version: str | None = None
 
@@ -72,3 +73,8 @@ class WatchOut(BaseModel):
     ok: bool
     message: str
     current_price: float
+
+
+class PasteRequest(BaseModel):
+    product_id: int
+    text: str = Field(min_length=40, max_length=20000)
