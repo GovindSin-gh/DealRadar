@@ -1,4 +1,5 @@
 import Aspects from "./Aspects";
+import PasteReviews from "./PasteReviews";
 import Watch from "./Watch";
 import PriceChart, { inr } from "./PriceChart";
 
@@ -25,7 +26,7 @@ const List = ({ title, items, tone, mark }) => (
   </Card>
 );
 
-export default function Result({ data }) {
+export default function Result({ data, onUpdate }) {
   const { analysis: a, price_stats: s } = data;
   const below = s.percent_vs_average <= 0;
   const shop = data.shop === "amazon" ? "Amazon.in" : "Flipkart";
@@ -59,7 +60,7 @@ export default function Result({ data }) {
         <div className="flex flex-wrap justify-between gap-2 mb-2">
           <h3 className="text-slate-50 font-semibold">Verdict</h3>
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-mono ring-1 ${a.source === "qwen" ? "bg-indigo-500/10 text-indigo-300 ring-indigo-500/30" : "bg-amber-400/10 text-amber-400 ring-amber-400/30"}`}>
-            {(a.source === "qwen" ? "written by Qwen AI" : "automatic summary") + (a.price_only ? " · price only, no reviews found" : "")}
+            {(a.source === "qwen" ? "written by Qwen AI" : "automatic summary") + (a.price_only ? " · price only, no reviews found" : "") + (a.page_summary_used ? " · based on the shop's customer summary" : "")}
           </span>
         </div>
         <p className="text-slate-50 font-medium">{a.verdict}</p>
@@ -70,6 +71,8 @@ export default function Result({ data }) {
 
       <div className="md:col-span-6"><List title="Pros" items={a.pros} tone="text-emerald-400" mark="✓" /></div>
       <div className="md:col-span-6"><List title="Cons" items={a.cons} tone="text-red-400" mark="✗" /></div>
+
+      <PasteReviews key={data.id} productId={data.id} open={a.price_only || data.review_count < 5} onUpdate={onUpdate} />
 
       <Watch productId={data.id} currentPrice={data.current_price} />
 
