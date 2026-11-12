@@ -13,10 +13,10 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy import delete, func, select, text
 from sqlalchemy.orm import Session
 
-from . import classifier, llm, providers, scrape_queue, store
+from . import classifier, llm, paste_reviews, providers, scrape_queue, store
 from .config import settings
 from .db import Base, PriceHistory, Product, RawReview, RequestCount, SystemLog, Watch, engine, get_db, log_event, utcnow
-from .schemas import AnalyzeRequest, ProductOut, WatchOut, WatchRequest
+from .schemas import AnalyzeRequest, PasteRequest, ProductOut, WatchOut, WatchRequest
 
 MAX_WATCHES_PER_EMAIL = 10
 
@@ -72,6 +72,16 @@ def _check_rate_limit(db: Session, key: str, limit: int, what: str, hint: str = 
 
 
 # ---------- routes ----------
+def _analyze_and_store(db: Session, product: Product, page_summary: str = "") -> None:
+    """Run the verdict (Qwen) and the aspect classifier on everything saved for this product, and store the result."""
+    prices = [h.price for h in db.scalars(select(PriceHistory).where(PriceHistory.product_id == product.id))]
+    reviews = [(r.review_text, r.rating) for r in db.scalars(select(RawReview).where(RawReview.product_id == product.id))]
+    result = llm.analyze(product.title, product.current_price, _stats(prices, product.current_price), reviews, page_summary)
+    result["aspects"], result["model_version"] = classifier.predict([t for t, _ in reviews])
+    product.analysis_json, product.analyzed_at = json.dumps(result), utcnow()
+    db.commit()
+
+
 @app.get("/api/health")
 def health(db: Session = Depends(get_db)):
     try:
@@ -91,6 +101,9 @@ def analyze(req: AnalyzeRequest, request: Request, db: Session = Depends(get_db)
     if not parsed:
         raise HTTPException(422, "Please paste a product link from amazon.in or flipkart.com")
     url, shop = parsed
+    if shop not in settings.enabled_shops:
+        names = {"amazon": "Amazon.in", "flipkart": "Flipkart"}
+        raise HTTPException(422, f"{names.get(shop, shop)} is not available right now. Please paste a link from {' or '.join(names[s] for s in settings.enabled_shops if s in names)}.")
 
     product = db.scalar(select(Product).where(Product.url == url))
     fresh = product and product.analyzed_at and utcnow() - product.analyzed_at < timedelta(hours=settings.cache_hours)
@@ -108,6 +121,7 @@ def analyze(req: AnalyzeRequest, request: Request, db: Session = Depends(get_db)
         return JSONResponse(status_code=202, content={"status": "pending", "message": message, "retry_after": 8})
 
     limit()
+    page_summary = ""
     if not queued:  # queued shops: the worker already saved the data, we only analyze it
         try:
             data = providers.fetch_product(url, shop)
@@ -119,13 +133,11 @@ def analyze(req: AnalyzeRequest, request: Request, db: Session = Depends(get_db)
                 return out
             raise HTTPException(502, f"Could not read that product page right now ({e}). Please try again later.")
         product = store.save_product_data(db, url, shop, data)
+        page_summary = data.page_summary
+        if settings.live_scraping and not data.reviews:  # leave a trail so we can tell "blocked" from "selectors stale"
+            log_event(db, "info", "analyze", f"no reviews found for {url}: {data.diag or 'n/a'}")
 
-    prices = [h.price for h in db.scalars(select(PriceHistory).where(PriceHistory.product_id == product.id))]
-    reviews = [(r.review_text, r.rating) for r in db.scalars(select(RawReview).where(RawReview.product_id == product.id))]
-    result = llm.analyze(product.title, product.current_price, _stats(prices, product.current_price), reviews)
-    result["aspects"], result["model_version"] = classifier.predict([t for t, _ in reviews])
-    product.analysis_json, product.analyzed_at = json.dumps(result), utcnow()
-    db.commit()
+    _analyze_and_store(db, product, page_summary)
     return _response(product, db, cached=False)
 
 
@@ -172,3 +184,26 @@ def logs(x_admin_token: str | None = Header(default=None), db: Session = Depends
         raise HTTPException(404, "Not found")
     rows = db.scalars(select(SystemLog).order_by(SystemLog.id.desc()).limit(100)).all()
     return [{"time": r.created_at, "level": r.level, "source": r.source, "message": r.message} for r in rows]
+
+
+@app.post("/api/reviews", response_model=ProductOut)
+def add_reviews(req: PasteRequest, request: Request, db: Session = Depends(get_db)):
+    """Reviews the visitor copied from the shop page. Saved, then the verdict and aspect bars are recomputed."""
+    product = db.get(Product, req.product_id)
+    if not product:
+        raise HTTPException(404, "Product not found")
+    _check_rate_limit(db, "p" + _client_id(request), settings.watch_limit_per_hour, "review pastes")
+    found = paste_reviews.parse_pasted(req.text)
+    if not found:
+        raise HTTPException(422, "Could not find any reviews with star ratings in that text. Copy the reviews section from the shop page, including lines like '5.0 out of 5 stars', and paste again.")
+    known = {t for (t,) in db.execute(select(RawReview.review_text).where(RawReview.product_id == product.id))}
+    added = 0
+    for text, rating in found:
+        if text not in known:
+            db.add(RawReview(product_id=product.id, review_text=text, rating=rating))
+            added += 1
+    db.commit()
+    _analyze_and_store(db, product)
+    out = _response(product, db, cached=False)
+    out["notice"] = f"Added {added} review{'s' if added != 1 else ''} you pasted." if added else "Those reviews were already saved."
+    return out
