@@ -25,6 +25,12 @@ GitHub Actions: daily update | weekly retrain -> DVC + MLflow (DAGsHub) -> quali
 - **Price-drop emails** need an SMTP account (a Gmail app password works). Without one the daily job skips sending and retries once it is configured.
 - **The included model is a demo** trained on synthetic reviews. Replace it with real data (see `mlops/README.md`).
 
+## Shops
+`ENABLED_SHOPS=amazon` (default). Flipkart answers automated requests with HTTP 529/429, so it is paused; set `ENABLED_SHOPS=amazon,flipkart` to switch it back on.
+
+## Getting reviews
+In order: review blocks in the page, Qwen reading the page's review text (every review must appear word for word), the shop's own "Customers say" summary, and an **Add reviews yourself** box where visitors paste reviews copied from the shop page (`POST /api/reviews`). When none are found, `/api/logs` records what the parser saw.
+
 ## Shops that refuse the server (HTTP 429)
 Set `QUEUE_SHOPS=flipkart`, `GITHUB_REPO` and `GITHUB_DISPATCH_TOKEN` on Render. The API then starts the `scrape-on-demand.yml` workflow, the page waits, and the worker saves the product. Without a token the request waits for the daily job. See step 10 of `docs/explainable.html`. This changes where the request comes from; it does not hide it, so the shop may refuse GitHub too.
 
