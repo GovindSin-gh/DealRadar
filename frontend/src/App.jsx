@@ -4,7 +4,7 @@ import Result from "./components/Result";
 
 const EXAMPLES = [
   ["Amazon.in phone", "https://www.amazon.in/Nova-X-Pro/dp/B0EXAMPLE1"],
-  ["Flipkart laptop", "https://www.flipkart.com/vertex-book-14/p/itmEXAMPLE2"],
+  ["Amazon.in laptop", "https://www.amazon.in/Vertex-Book-14/dp/B0EXAMPLE2"],
 ];
 const STEPS = ["Fetching the product page", "Reading price history", "Reading reviews", "Writing the verdict", "Almost done"];
 
@@ -53,7 +53,7 @@ export default function App() {
 
       <main className="max-w-6xl w-full mx-auto px-5 py-10 flex-1">
         <h1 className="text-3xl md:text-4xl font-bold text-slate-50 max-w-2xl">Should you buy it now? Paste a link and find out.</h1>
-        <p className="mt-2 text-slate-400 max-w-xl">Price history, what owners complain about, and a plain verdict for smartphones and laptops on Amazon.in and Flipkart.</p>
+        <p className="mt-2 text-slate-400 max-w-xl">Price history, what owners complain about, and a plain verdict for smartphones and laptops on Amazon.in.</p>
 
         <form onSubmit={submit} className="mt-6 flex flex-col sm:flex-row gap-3">
           <input value={url} onChange={(e) => setUrl(e.target.value)} required type="url" aria-label="Product link"
@@ -85,7 +85,7 @@ export default function App() {
           {state === "error" && (
             <div className="bg-red-400/10 border border-red-400/30 text-red-400 rounded-2xl p-5 text-sm">{error}</div>
           )}
-          {state === "done" && data && <Result data={data} />}
+          {state === "done" && data && <Result data={data} onUpdate={setData} />}
         </div>
       </main>
 
