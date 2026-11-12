@@ -15,7 +15,7 @@ SYSTEM = (
     '"summary" (2-3 sentences), "pros" (list of up to 4 short strings), "cons" (list of up to 4 short strings), '
     '"value_score" (number 0-10), "verdict" (one sentence: buy now, wait, or skip, and why). '
     "Use only the facts given. Prices are in Indian rupees. If no reviews are provided, say clearly that the verdict is based on price only, "
-    "and do not invent customer opinions."
+    "and do not invent customer opinions. If a customer-feedback summary written by the shop is provided, you may rely on it and say so."
 )
 
 
@@ -38,13 +38,13 @@ def _clean(d: dict) -> dict:
     }
 
 
-def _groq(title, price, stats, reviews) -> dict:
+def _groq(title, price, stats, reviews, page_summary="") -> dict:
     sample = "\n".join(f"- ({r}/5) {t[:300]}" for t, r in reviews[:30]) or "(no reviews were available)"
     user = (
         f"Product: {title}\nCurrent price: Rs {price:,.0f}\n"
         f"90-day average: Rs {stats['avg']:,.0f}, lowest: Rs {stats['min']:,.0f}, highest: Rs {stats['max']:,.0f}\n"
         f"Reviews:\n{sample}"
-    )
+    ) + (f"\nCustomer-feedback summary shown on the shop page: {page_summary[:1200]}" if page_summary else "")
     body = {
         "model": settings.groq_model,
         "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}],
@@ -72,17 +72,18 @@ def _verdict_from_price(price, stats) -> str:
     return "Fair price: close to its average."
 
 
-def _price_only(title, price, stats) -> dict:
+def _price_only(title, price, stats, page_summary="") -> dict:
+    note = f" The shop's customer summary says: {page_summary[:300]}" if page_summary else ""
     return {
-        "summary": f"{title}: no reviews could be read for this product, so this verdict is based on price only.",
+        "summary": (f"{title}: no individual reviews could be read for this product, so this verdict is based on price" + (" and the shop's own summary." if page_summary else " only.")) + note,
         "pros": ["Review data not available"], "cons": [],
         "value_score": 5.0, "verdict": _verdict_from_price(price, stats), "source": "fallback",
     }
 
 
-def _fallback(title, price, stats, reviews) -> dict:
+def _fallback(title, price, stats, reviews, page_summary="") -> dict:
     if not reviews:
-        return _price_only(title, price, stats)
+        return _price_only(title, price, stats, page_summary)
     avg_rating = sum(r for _, r in reviews) / len(reviews)
     pos, neg = {a: 0 for a in ASPECTS}, {a: 0 for a in ASPECTS}
     for text, rating in reviews:
@@ -110,19 +111,20 @@ def _fallback(title, price, stats, reviews) -> dict:
     }
 
 
-def analyze(title, price, stats, reviews) -> dict:
-    out = _analyze(title, price, stats, reviews)
-    out["price_only"] = not reviews
+def analyze(title, price, stats, reviews, page_summary="") -> dict:
+    out = _analyze(title, price, stats, reviews, page_summary)
+    out["price_only"] = not reviews and not page_summary
+    out["page_summary_used"] = bool(page_summary) and not reviews
     return out
 
 
-def _analyze(title, price, stats, reviews) -> dict:
+def _analyze(title, price, stats, reviews, page_summary="") -> dict:
     if settings.groq_api_key:
         try:
-            return {**_groq(title, price, stats, reviews), "source": "qwen"}
+            return {**_groq(title, price, stats, reviews, page_summary), "source": "qwen"}
         except Exception as e:  # network, quota, bad JSON: never break the request
             log.warning("Groq failed, using fallback: %s", e)
-    return {**_fallback(title, price, stats, reviews), "source": "fallback"}
+    return {**_fallback(title, price, stats, reviews, page_summary), "source": "fallback"}
 
 
 def extract_product(page_text: str) -> dict | None:
@@ -150,3 +152,39 @@ def extract_product(page_text: str) -> dict | None:
         log.warning("LLM price %s not found in the page text, rejected", price)
         return None
     return {"title": str(data.get("title") or "")[:200], "price": price}
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"\s+", " ", s.replace("\u2019", "'").replace("\u201c", '"').replace("\u201d", '"')).strip().lower()
+
+
+def extract_reviews(page_text: str, limit: int = 15) -> list[tuple[str, int]]:
+    """Qwen reads customer reviews out of page text our selectors could not parse.
+    Every review it returns must appear word for word in the text (none can be invented) and carry a 1-5 star rating."""
+    if not (settings.groq_api_key and settings.llm_extract_fallback) or len(page_text) < 80:
+        return []
+    system = (
+        "From the text, copy the customer reviews EXACTLY as written (never rephrase or invent). Reply with ONLY JSON: "
+        '{"reviews": [{"text": string (verbatim, max 400 characters), "stars": integer 1 to 5}]}. '
+        "Skip anything that is not a customer review. Use an empty list if there are none."
+    )
+    body = {"model": settings.groq_model, "temperature": 0, "max_tokens": 2500,
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": page_text[:9000]}]}
+    try:
+        r = httpx.post(GROQ_URL, json=body, headers={"Authorization": f"Bearer {settings.groq_api_key}"}, timeout=40)
+        r.raise_for_status()
+        items = _extract_json(r.json()["choices"][0]["message"]["content"]).get("reviews", [])
+    except Exception as e:
+        log.warning("LLM review extraction failed: %s", e)
+        return []
+    haystack, out = _norm(page_text), []
+    for it in items if isinstance(items, list) else []:
+        try:
+            text, stars = str(it.get("text", "")).strip(), int(round(float(it.get("stars"))))
+        except (TypeError, ValueError, AttributeError):
+            continue
+        if len(text) >= 20 and 1 <= stars <= 5 and _norm(text) in haystack:
+            out.append((text[:400], stars))
+        if len(out) >= limit:
+            break
+    return out
