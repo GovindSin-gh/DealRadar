@@ -102,7 +102,39 @@ def parse_amazon(html: str) -> dict:
         '[data-hook="review-body"], .review-text-content',
         '[data-hook="review-star-rating"], [data-hook="cmps-review-star-rating"], i.review-rating, .a-icon-alt',
     )
-    return {"title": title.strip()[:200], "price": price, "category": _category(title), "reviews": reviews}
+    text = soup.get_text("\n", strip=True)
+    region = _review_region(text)
+    if not reviews and region:  # selectors found nothing but the page does have a reviews section: let Qwen read it (verified)
+        reviews = llm.extract_reviews(region)
+    summary = _customers_say(text)
+    diag = (f"review_nodes={len(nodes)}, parsed_reviews={len(reviews)}, customers_say={bool(summary)}, "
+            f"reviews_heading={bool(region)}, page_chars={len(html)}")
+    return {"title": title.strip()[:200], "price": price, "category": _category(title), "reviews": reviews,
+            "page_summary": summary, "diag": diag}
+
+
+def _review_region(text: str) -> str:
+    low = text.lower()
+    for marker in ("top reviews from", "top reviews", "customer reviews"):
+        i = low.find(marker)
+        if i != -1:
+            return text[i:i + 9000]
+    return ""
+
+
+def _customers_say(text: str) -> str:
+    """Amazon's own short summary of customer feedback ("Customers say ..."), when the page includes it."""
+    low = text.lower()
+    i = low.find("customers say")
+    if i == -1:
+        return ""
+    chunk = text[i + len("customers say"): i + 1400]
+    for stop in ("select to learn more", "top reviews", "reviews with images", "see all reviews", "customer reviews"):
+        j = chunk.lower().find(stop)
+        if j != -1:
+            chunk = chunk[:j]
+    chunk = " ".join(chunk.split())
+    return chunk[:900] if len(chunk) >= 40 else ""
 
 
 def fetch_amazon(url: str) -> dict:
